@@ -7,19 +7,44 @@ function getToken() {
   } catch { return ''; }
 }
 
+// Map raw server errors to user-friendly messages
+function friendlyError(raw, status) {
+  if (status === 500 || /timed?\s*out|buffering|ECONNREFUSED|ENOTFOUND|socket/i.test(raw)) {
+    return 'Server is temporarily unavailable. Please try again in a moment.';
+  }
+  if (/access token|authentication error/i.test(raw)) {
+    return 'Server is temporarily unavailable. Please try again in a moment.';
+  }
+  if (status === 429) return 'Too many requests. Please wait a moment and try again.';
+  if (status === 503) return 'Service is under maintenance. Please try again shortly.';
+  return raw || 'Something went wrong. Please try again.';
+}
+
 async function request(path, options = {}) {
   const token = getToken();
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  let res;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch (err) {
+    throw new Error('Unable to connect to server. Please check your internet connection.');
+  }
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    if (!res.ok) throw new Error('Server error. Please try again.');
+    return {};
+  }
+
+  if (!res.ok) throw new Error(friendlyError(data.error, res.status));
   return data;
 }
 
