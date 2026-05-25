@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar.jsx';
 import TopNav from './TopNav.jsx';
+import ChatWidget from './ChatWidget.jsx';
 
 export default function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -33,6 +34,7 @@ export default function DashboardLayout() {
           </AnimatePresence>
         </main>
       </div>
+      <ChatWidget/>
     </div>
   );
 }

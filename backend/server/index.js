@@ -16,6 +16,7 @@ import teamMemberRoutes from './routes/teamMembers.js';
 import teamMessageRoutes from './routes/teamMessages.js';
 import workflowRoutes from './routes/workflows.js';
 import notificationRoutes from './routes/notifications.js';
+import assistantRoutes from './routes/assistant.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,6 +73,7 @@ app.use('/api/team-members', teamMemberRoutes);
 app.use('/api/team-messages', teamMessageRoutes);
 app.use('/api/workflows', workflowRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/assistant', assistantRoutes);
 
 // Local dev: connect to MongoDB and start server
 if (!process.env.VERCEL) {

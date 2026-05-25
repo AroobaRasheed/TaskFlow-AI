@@ -13,6 +13,7 @@ import teamMemberRoutes from './lib/routes/teamMembers.js';
 import teamMessageRoutes from './lib/routes/teamMessages.js';
 import workflowRoutes from './lib/routes/workflows.js';
 import notificationRoutes from './lib/routes/notifications.js';
+import assistantRoutes from './lib/routes/assistant.js';
 
 const app = express();
 
@@ -56,5 +57,6 @@ app.use('/api/team-members', teamMemberRoutes);
 app.use('/api/team-messages', teamMessageRoutes);
 app.use('/api/workflows', workflowRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/assistant', assistantRoutes);
 
 export default app;
