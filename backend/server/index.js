@@ -47,20 +47,6 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Connect to DB before handling any request (serverless-safe)
-let isDbConnected = false;
-app.use(async (req, res, next) => {
-  if (!isDbConnected) {
-    try {
-      await connectDB();
-      isDbConnected = true;
-    } catch (err) {
-      return res.status(500).json({ error: 'Database connection failed' });
-    }
-  }
-  next();
-});
-
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
 
