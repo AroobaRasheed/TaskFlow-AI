@@ -2,17 +2,17 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
-import userRoutes from './routes/users.js';
-import taskRoutes from './routes/tasks.js';
-import dashboardRoutes from './routes/dashboard.js';
-import chatRoutes from './routes/chat.js';
-import aiRoutes from './routes/ai.js';
-import progressRoutes from './routes/progress.js';
-import analyticsRoutes from './routes/analytics.js';
-import teamMemberRoutes from './routes/teamMembers.js';
-import teamMessageRoutes from './routes/teamMessages.js';
-import workflowRoutes from './routes/workflows.js';
-import notificationRoutes from './routes/notifications.js';
+import userRoutes from './lib/routes/users.js';
+import taskRoutes from './lib/routes/tasks.js';
+import dashboardRoutes from './lib/routes/dashboard.js';
+import chatRoutes from './lib/routes/chat.js';
+import aiRoutes from './lib/routes/ai.js';
+import progressRoutes from './lib/routes/progress.js';
+import analyticsRoutes from './lib/routes/analytics.js';
+import teamMemberRoutes from './lib/routes/teamMembers.js';
+import teamMessageRoutes from './lib/routes/teamMessages.js';
+import workflowRoutes from './lib/routes/workflows.js';
+import notificationRoutes from './lib/routes/notifications.js';
 
 const app = express();
 
