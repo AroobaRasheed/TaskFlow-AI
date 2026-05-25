@@ -28,10 +28,24 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.CLIENT_URL || '*',
   credentials: true,
 }));
 app.use(express.json());
+
+// Connect to DB before handling any request (serverless-safe)
+let isDbConnected = false;
+app.use(async (req, res, next) => {
+  if (!isDbConnected) {
+    try {
+      await connectDB();
+      isDbConnected = true;
+    } catch (err) {
+      return res.status(500).json({ error: 'Database connection failed' });
+    }
+  }
+  next();
+});
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
@@ -49,12 +63,17 @@ app.use('/api/team-messages', teamMessageRoutes);
 app.use('/api/workflows', workflowRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Connect to MongoDB and start server
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+// Local dev: connect to MongoDB and start server
+if (process.env.VERCEL !== '1') {
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }).catch((err) => {
+    console.error('Failed to start server:', err.message);
+    process.exit(1);
   });
-}).catch((err) => {
-  console.error('Failed to start server:', err.message);
-  process.exit(1);
-});
+}
+
+// Export for Vercel serverless
+export default app;
