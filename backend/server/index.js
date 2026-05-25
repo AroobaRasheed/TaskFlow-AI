@@ -47,6 +47,16 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Connect to DB on each request (needed for serverless)
+app.use((req, res, next) => {
+  connectDB()
+    .then(() => next())
+    .catch(() => res.status(500).json({ error: 'Database connection failed' }));
+});
+
+// Root route
+app.get('/', (req, res) => res.json({ message: 'TaskFlow AI Backend API', status: 'running' }));
+
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
 
@@ -64,7 +74,7 @@ app.use('/api/workflows', workflowRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Local dev: connect to MongoDB and start server
-if (process.env.VERCEL !== '1') {
+if (!process.env.VERCEL) {
   connectDB().then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
