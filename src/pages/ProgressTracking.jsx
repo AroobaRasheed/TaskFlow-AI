@@ -6,7 +6,6 @@ import {
 import { CheckCircle2, Clock, AlertTriangle, TrendingUp, Download, Users, Target } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useApi } from '../hooks/useApi.js';
-import { teamMembers } from '../data/mock.js';
 import AIRecommendation from '../components/AIRecommendation.jsx';
 
 export default function ProgressTracking() {
@@ -86,15 +85,7 @@ export default function ProgressTracking() {
   ].filter(d => d.value > 0);
 
   // ─── Weekly trend (mock data, realistic) ─────────────────────────────────
-  const weeklyTrend = [
-    { day: 'Mon', completed: 3, added: 5 },
-    { day: 'Tue', completed: 7, added: 4 },
-    { day: 'Wed', completed: 5, added: 6 },
-    { day: 'Thu', completed: 9, added: 3 },
-    { day: 'Fri', completed: 6, added: 2 },
-    { day: 'Sat', completed: 2, added: 1 },
-    { day: 'Sun', completed: 1, added: 0 },
-  ];
+  const weeklyTrend = [];
 
   // ─── Upcoming deadlines ───────────────────────────────────────────────────
   const deadlineList = upcoming?.slice(0, 5) ?? [];
@@ -287,25 +278,7 @@ export default function ProgressTracking() {
             <Users className="w-4 h-4" style={{ color: 'var(--accent-1, #A78BFA)' }}/>
             <div className="font-display font-semibold">Team Completion</div>
           </div>
-          <div className="space-y-4">
-            {teamMembers.map((m, i) => (
-              <motion.div key={m.name} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md grid place-items-center text-xs font-semibold shrink-0"
-                      style={{ background: m.avatar.color }}>{m.avatar.initials}</div>
-                    <span className="text-sm font-medium truncate">{m.name.split(' ')[0]}</span>
-                  </div>
-                  <span className="text-xs text-white/50">{m.completion}%</span>
-                </div>
-                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${m.completion}%` }}
-                    transition={{ duration: 0.9, delay: i * 0.1 }}
-                    className="h-full rounded-full" style={{ background: m.avatar.color }}/>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          <div className="text-sm text-white/40 text-center py-6">Add team members to see completion rates</div>
         </div>
 
         {/* AI Recommendations */}

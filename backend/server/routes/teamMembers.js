@@ -11,10 +11,11 @@ const getInitials = (name) => name.split(' ').map(w => w[0]).join('').toUpperCas
 // ─── List team members ────────────────────────────────────────────────────
 router.get('/', auth, async (req, res) => {
   try {
-    const members = await TeamMember.find().sort({ createdAt: -1 });
+    const members = await TeamMember.find({ addedBy: req.user._id }).sort({ createdAt: -1 });
     res.json(members);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -49,7 +50,8 @@ router.post('/', auth, async (req, res) => {
 
     res.status(201).json(member);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -65,22 +67,24 @@ router.patch('/:id', auth, async (req, res) => {
     if (req.body.department !== undefined) updates.department = req.body.department;
     if (req.body.status !== undefined) updates.status = req.body.status;
 
-    const member = await TeamMember.findByIdAndUpdate(req.params.id, updates, { new: true });
+    const member = await TeamMember.findOneAndUpdate({ _id: req.params.id, addedBy: req.user._id }, updates, { new: true });
     if (!member) return res.status(404).json({ error: 'Member not found.' });
     res.json(member);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Remove team member ───────────────────────────────────────────────────
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const member = await TeamMember.findByIdAndDelete(req.params.id);
+    const member = await TeamMember.findOneAndDelete({ _id: req.params.id, addedBy: req.user._id });
     if (!member) return res.status(404).json({ error: 'Member not found.' });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

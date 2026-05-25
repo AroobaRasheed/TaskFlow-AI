@@ -71,7 +71,8 @@ router.post('/signup', async (req, res) => {
       devToken,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -92,7 +93,8 @@ router.post('/verify-email', async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -119,7 +121,8 @@ router.post('/login', async (req, res) => {
       token: signToken(user._id),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -140,7 +143,8 @@ router.patch('/profile', auth, async (req, res) => {
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select('-password');
     res.json(user);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -150,7 +154,8 @@ router.get('/', auth, async (req, res) => {
     const users = await User.find().select('-password');
     res.json(users);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -170,7 +175,8 @@ router.post('/resend-otp', async (req, res) => {
     let devToken = token; // always return in dev for now
     res.json({ success: true, devToken });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -18,6 +18,16 @@ export function useApi(fetcher, options = {}) {
       setData(result);
       setError(null);
     } catch (err) {
+      // Retry once on server errors
+      if (/server|unavailable|5\d\d/i.test(err.message)) {
+        try {
+          await new Promise(r => setTimeout(r, 1000));
+          const result = await fetcher();
+          setData(result);
+          setError(null);
+          return;
+        } catch { /* fall through to original error */ }
+      }
       setError(err.message);
     } finally {
       setLoading(false);

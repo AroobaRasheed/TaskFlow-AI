@@ -7,7 +7,7 @@ const router = Router();
 // ─── List all workflows ───────────────────────────────────────────────────
 router.get('/', auth, async (req, res) => {
   try {
-    const workflows = await Workflow.find().sort({ createdAt: -1 });
+    const workflows = await Workflow.find({ createdBy: req.user._id }).sort({ createdAt: -1 });
     const result = workflows.map(wf => {
       const obj = wf.toObject();
       const completed = obj.steps.filter(s => s.status === 'completed').length;
@@ -18,18 +18,20 @@ router.get('/', auth, async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Get single workflow ──────────────────────────────────────────────────
 router.get('/:id', auth, async (req, res) => {
   try {
-    const wf = await Workflow.findById(req.params.id);
+    const wf = await Workflow.findOne({ _id: req.params.id, createdBy: req.user._id });
     if (!wf) return res.status(404).json({ error: 'Workflow not found.' });
     res.json(wf);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -56,7 +58,8 @@ router.post('/', auth, async (req, res) => {
 
     res.status(201).json(wf);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -64,7 +67,7 @@ router.post('/', auth, async (req, res) => {
 router.patch('/:id/steps/:stepId', auth, async (req, res) => {
   try {
     const { status } = req.body;
-    const wf = await Workflow.findById(req.params.id);
+    const wf = await Workflow.findOne({ _id: req.params.id, createdBy: req.user._id });
     if (!wf) return res.status(404).json({ error: 'Workflow not found.' });
 
     const step = wf.steps.id(req.params.stepId);
@@ -82,18 +85,20 @@ router.patch('/:id/steps/:stepId', auth, async (req, res) => {
     await wf.save();
     res.json(wf);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Delete workflow ──────────────────────────────────────────────────────
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const wf = await Workflow.findByIdAndDelete(req.params.id);
+    const wf = await Workflow.findOneAndDelete({ _id: req.params.id, createdBy: req.user._id });
     if (!wf) return res.status(404).json({ error: 'Workflow not found.' });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

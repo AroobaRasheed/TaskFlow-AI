@@ -40,7 +40,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all for now, tighten later
+      callback(new Error('Not allowed by CORS'), false);
     }
   },
   credentials: true,

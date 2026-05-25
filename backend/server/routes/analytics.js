@@ -18,33 +18,36 @@ function currentWeekLabel() {
 // ─── Live productivity score ──────────────────────────────────────────────
 router.get('/score', auth, async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find({ createdBy: req.user._id });
     const completed = tasks.filter(t => t.status === 'completed').length;
     res.json({ score: calcScore(completed, tasks.length), total: tasks.length, completed });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Overdue count ────────────────────────────────────────────────────────
 router.get('/overdue', auth, async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find({ createdBy: req.user._id });
     const overdue = tasks.filter(t => t.status !== 'completed' && isOverdue(t.deadline));
     res.json({ count: overdue.length });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Weekly trends ────────────────────────────────────────────────────────
 router.get('/trends', auth, async (req, res) => {
   try {
-    const weeks = parseInt(req.query.weeks) || 8;
-    const snapshots = await Analytics.find().sort({ createdAt: -1 }).limit(weeks);
+    const weeks = Math.min(Math.max(parseInt(req.query.weeks) || 8, 1), 52);
+    const snapshots = await Analytics.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(weeks);
     res.json(snapshots.reverse());
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -13,6 +13,7 @@ router.get('/', auth, async (req, res) => {
     const filter = {};
     if (req.query.status) filter.status = req.query.status;
     if (req.query.priority) filter.priority = req.query.priority;
+    filter.createdBy = req.user._id;
 
     const tasks = await Task.find(filter).sort({ createdAt: -1 }).limit(100);
     const result = tasks.map(t => ({
@@ -21,18 +22,20 @@ router.get('/', auth, async (req, res) => {
     }));
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Get single task ──────────────────────────────────────────────────────
 router.get('/:id', auth, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, createdBy: req.user._id });
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     res.json({ ...task.toObject(), isOverdue: task.status !== 'completed' && isOverdue(task.deadline) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -62,14 +65,15 @@ router.post('/', auth, async (req, res) => {
 
     res.status(201).json(task);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Update task ──────────────────────────────────────────────────────────
 router.patch('/:id', auth, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, createdBy: req.user._id });
     if (!task) return res.status(404).json({ error: 'Task not found.' });
 
     const allowed = ['title', 'description', 'priority', 'status', 'deadline', 'assignedTo', 'estimatedTime', 'aiSuggestions'];
@@ -80,7 +84,8 @@ router.patch('/:id', auth, async (req, res) => {
     await task.save();
     res.json(task);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -88,22 +93,24 @@ router.patch('/:id', auth, async (req, res) => {
 router.patch('/:id/status', auth, async (req, res) => {
   try {
     const { status } = req.body;
-    const task = await Task.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const task = await Task.findOneAndUpdate({ _id: req.params.id, createdBy: req.user._id }, { status }, { new: true });
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     res.json(task);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Delete task ──────────────────────────────────────────────────────────
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const task = await Task.findByIdAndDelete(req.params.id);
+    const task = await Task.findOneAndDelete({ _id: req.params.id, createdBy: req.user._id });
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

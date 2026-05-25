@@ -17,4 +17,6 @@ const workflowSchema = new mongoose.Schema({
   createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
+workflowSchema.index({ createdBy: 1 });
+
 export default mongoose.model('Workflow', workflowSchema);

@@ -12,17 +12,8 @@ router.get('/', auth, async (req, res) => {
       .limit(50);
     res.json(notifications);
   } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ─── Mark as read ─────────────────────────────────────────────────────────
-router.patch('/:id/read', auth, async (req, res) => {
-  try {
-    const notif = await Notification.findByIdAndUpdate(req.params.id, { read: true }, { new: true });
-    res.json(notif);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -32,7 +23,19 @@ router.patch('/read-all', auth, async (req, res) => {
     await Notification.updateMany({ userId: req.user._id, read: false }, { read: true });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── Mark as read ─────────────────────────────────────────────────────────
+router.patch('/:id/read', auth, async (req, res) => {
+  try {
+    const notif = await Notification.findOneAndUpdate({ _id: req.params.id, userId: req.user._id }, { read: true }, { new: true });
+    res.json(notif);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

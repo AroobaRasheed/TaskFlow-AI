@@ -10,7 +10,22 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const s = localStorage.getItem('taskflow_user');
-      return s ? JSON.parse(s) : null;
+      if (!s) return null;
+      const parsed = JSON.parse(s);
+      // Check token expiry
+      if (parsed?.token) {
+        try {
+          const payload = JSON.parse(atob(parsed.token.split('.')[1]));
+          if (payload.exp && payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem('taskflow_user');
+            return null;
+          }
+        } catch { /* invalid token format, clear it */
+          localStorage.removeItem('taskflow_user');
+          return null;
+        }
+      }
+      return parsed;
     } catch { return null; }
   });
 
@@ -25,6 +40,7 @@ export function AuthProvider({ children }) {
   };
 
   const updateUser = (updates) => {
+    if (!user) return;
     const updated = { ...user, ...updates };
     setUser(updated);
     localStorage.setItem('taskflow_user', JSON.stringify(updated));

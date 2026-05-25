@@ -10,7 +10,7 @@ const calcScore = (completed, total) => total === 0 ? 0 : Math.min(100, Math.rou
 // ─── Dashboard stats ──────────────────────────────────────────────────────
 router.get('/stats', auth, async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find({ createdBy: req.user._id });
     const total = tasks.length;
     const completed = tasks.filter(t => t.status === 'completed').length;
     const inProgress = tasks.filter(t => t.status === 'in_progress').length;
@@ -27,14 +27,15 @@ router.get('/stats', auth, async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Recent activity ──────────────────────────────────────────────────────
 router.get('/recent', auth, async (req, res) => {
   try {
-    const tasks = await Task.find().sort({ createdAt: -1 }).limit(10);
+    const tasks = await Task.find({ createdBy: req.user._id }).sort({ createdAt: -1 }).limit(10);
     res.json(tasks.map(t => ({
       _id: t._id,
       title: t.title,
@@ -43,14 +44,15 @@ router.get('/recent', auth, async (req, res) => {
       updatedAt: t.updatedAt,
     })));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Status distribution ──────────────────────────────────────────────────
 router.get('/distribution', auth, async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find({ createdBy: req.user._id });
     const total = tasks.length || 1;
     const todo = tasks.filter(t => t.status === 'todo').length;
     const inProgress = tasks.filter(t => t.status === 'in_progress').length;
@@ -62,7 +64,8 @@ router.get('/distribution', auth, async (req, res) => {
       { label: 'Completed', count: completed, pct: Math.round((completed / total) * 100) },
     ]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

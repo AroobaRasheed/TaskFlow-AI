@@ -4,31 +4,16 @@ import { BrainCircuit, Calendar, Users, Flag, Zap, Clock, AlertTriangle, ListChe
 import { api } from '../lib/api.js';
 import RobotAvatar from '../components/RobotAvatar.jsx';
 
-const MOCK_RESULT = {
-  priority: 'high',
-  estimatedHours: 144,
-  riskLevel: 'medium',
-  workflowSuggestions: [
-    'Audit current auth surface (mobile + web SDKs)',
-    'Spec WebAuthn ceremony flows and fallback UX',
-    'Backend: passkey registration + verification endpoints',
-    'Client: integrate WebAuthn APIs across platforms',
-    'Migration plan + opt-in beta, then forced rollout',
-    'Telemetry, error budgets, deprecate password flow',
-  ],
-  productivityAdvice: 'Pair back-end and mobile engineers for the first ceremony spike to reduce coordination overhead.',
-};
-
 export default function AITaskAnalyzer() {
   const [phase, setPhase] = useState('idle'); // idle | scanning | done
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
-    title: 'Migrate auth to passkeys',
-    description: 'Replace password-based auth with WebAuthn passkeys across mobile and web. Include fallback flows.',
-    deadline: '2026-06-15',
-    teamSize: 4,
-    priority: 'High',
+    title: '',
+    description: '',
+    deadline: '',
+    teamSize: 1,
+    priority: 'Medium',
   });
 
   const analyze = async () => {
@@ -47,11 +32,8 @@ export default function AITaskAnalyzer() {
       setResult(analysis);
       setPhase('done');
     } catch (err) {
-      // Fallback to mock if Gemini not configured
-      console.warn('AI not configured, using mock:', err.message);
-      await new Promise(r => setTimeout(r, 2000));
-      setResult(MOCK_RESULT);
-      setPhase('done');
+      setError(err.message || 'AI analysis unavailable. Please try again later.');
+      setPhase('idle');
     }
   };
 
@@ -133,7 +115,7 @@ export default function AITaskAnalyzer() {
                 <div>
                   <RobotAvatar size={180}/>
                   <p className="text-white/50 mt-4">Submit the task and Gemini AI will think it through.</p>
-                  <p className="text-white/30 text-xs mt-2">Works with mock data if Gemini key not set.</p>
+                  <p className="text-white/30 text-xs mt-2">Requires Gemini API key to be configured.</p>
                 </div>
               </motion.div>
             )}

@@ -31,11 +31,7 @@ export default function TopNav({ onMobileMenu }) {
     time: new Date(n.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     color: n.type === 'success' ? '#34D399' : n.type === 'warning' ? '#FBBF24' : n.type === 'error' ? '#F87171' : '#A78BFA',
   }));
-  const fallbackNotifs = notifications.length > 0 ? notifications : [
-    { title: 'AI flagged a high-risk task', message: 'Payments integration needs attention', time: '2m ago', color: '#F87171' },
-    { title: 'Q3 Roadmap assigned to you',  message: 'New task assigned by Mira',           time: '1h ago', color: '#A78BFA' },
-    { title: 'Mira completed 3 tasks',       message: 'Sprint progress updated',              time: '3h ago', color: '#34D399' },
-  ];
+  const fallbackNotifs = notifications;
 
   // ─── Search logic ─────────────────────────────────────────────────────────
   useEffect(() => {

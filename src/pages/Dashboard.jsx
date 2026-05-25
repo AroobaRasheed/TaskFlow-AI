@@ -7,7 +7,7 @@ import { useApi } from '../hooks/useApi.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import StatCard from '../components/StatCard.jsx';
 import AIRecommendation from '../components/AIRecommendation.jsx';
-import { weeklyProductivity, activity } from '../data/mock.js';
+import { useCallback } from 'react';
 
 const icons = [ListChecks, CheckCircle2, Clock, Flame];
 
@@ -45,12 +45,7 @@ export default function Dashboard() {
     date: new Date(t.deadline ?? Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     daysLeft: t.daysLeft,
     owner: 'Team',
-  })) ?? [
-    { title: 'Mobile App Beta',      date: 'May 24', daysLeft: 3,  owner: 'Mira'   },
-    { title: 'Investor Update Deck', date: 'May 27', daysLeft: 6,  owner: 'Alex'   },
-    { title: 'Security Audit',       date: 'Jun 02', daysLeft: 12, owner: 'Jordan' },
-    { title: 'Q3 Planning',          date: 'Jun 09', daysLeft: 19, owner: 'Team'   },
-  ];
+  })) ?? [];
 
   const activityFeed = recentTasks?.slice(0, 5).map(t => ({
     who: 'Team',
@@ -58,7 +53,7 @@ export default function Dashboard() {
     target: t.title,
     time: new Date(t.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     color: t.priority === 'high' ? '#F472B6' : t.priority === 'medium' ? '#A78BFA' : '#34D399',
-  })) ?? activity;
+  })) ?? [];
 
   const recs = [
     { title: 'Balance workload', desc: 'Reassign 2 overdue tasks to free up capacity and reduce team stress.' },
@@ -102,27 +97,8 @@ export default function Dashboard() {
               <Legend dot="var(--btn-to, #3B82F6)"   label="Focus %"/>
             </div>
           </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weeklyProductivity}>
-                <defs>
-                  <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="var(--btn-from, #A78BFA)" stopOpacity={0.6}/>
-                    <stop offset="100%" stopColor="var(--btn-from, #A78BFA)" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="g2" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="var(--btn-to, #3B82F6)" stopOpacity={0.5}/>
-                    <stop offset="100%" stopColor="var(--btn-to, #3B82F6)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false}/>
-                <XAxis dataKey="day" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} axisLine={false} tickLine={false}/>
-                <YAxis tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} axisLine={false} tickLine={false}/>
-                <Tooltip contentStyle={{ background: '#13131F', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 12 }} labelStyle={{ color: '#fff' }}/>
-                <Area type="monotone" dataKey="tasks" stroke="var(--btn-from, #A78BFA)" strokeWidth={2} fill="url(#g1)"/>
-                <Area type="monotone" dataKey="focus"  stroke="var(--btn-to, #3B82F6)"   strokeWidth={2} fill="url(#g2)"/>
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="h-72 grid place-items-center text-white/30 text-sm">
+            Weekly productivity chart will populate as you complete tasks
           </div>
         </motion.div>
 
@@ -177,7 +153,9 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="space-y-3">
-              {deadlines.map((d, i) => (
+              {deadlines.length === 0 ? (
+                <div className="text-sm text-white/40 text-center py-6">No upcoming deadlines</div>
+              ) : deadlines.map((d, i) => (
                 <motion.div key={d.title} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                   className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
                   <div className="w-10 h-10 rounded-xl grid place-items-center text-xs font-mono font-semibold shrink-0"
@@ -200,7 +178,9 @@ export default function Dashboard() {
           <div className="text-xs text-white/40 mb-4">Live feed</div>
           <div className="relative pl-5 space-y-5">
             <div className="absolute left-1.5 top-2 bottom-2 w-px bg-gradient-to-b from-purple/40 via-white/10 to-transparent"/>
-            {activityFeed.map((a, i) => (
+            {activityFeed.length === 0 ? (
+              <div className="text-sm text-white/40 text-center py-6">No recent activity</div>
+            ) : activityFeed.map((a, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                 className="relative">
                 <span className="absolute -left-[18px] top-1.5 w-3 h-3 rounded-full border-2 border-bg"
@@ -219,6 +199,8 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// unused import cleanup: AreaChart, Area removed from usage but kept in import for potential future use
 
 function Legend({ dot, label }) {
   return (

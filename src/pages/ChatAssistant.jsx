@@ -13,14 +13,6 @@ const SUGGESTIONS = [
   'Analyze project risk',
 ];
 
-const MOCK_REPLIES = {
-  'how should i divide tasks?': "Group by surface area, not feature. Carve a vertical slice (UI + API + data) per engineer so each can ship independently. For this sprint: Jordan on auth, Mira on dashboard, Sam on the AI scoring loop.",
-  'suggest workflow optimization': "Move stand-up to async — Loom or text. You'll get ~45 minutes/person/day back. Replace it with one 30-min focused sync on Wednesdays.",
-  'generate productivity tips': "Top three: 1) Batch shallow work to a single block after lunch. 2) Protect mornings for deep work. 3) End each day with a 5-min written hand-off.",
-  'analyze project risk': "Risk is concentrated in Payments (dependency chain of 4) and Auth (external SDK lag). Parallelize Payments and timebox Auth research to 2 days max before committing.",
-  default: "Here's what I'd recommend — split the deliverable into 3 vertical slices, pair engineers on the first slice, and ship the riskiest piece behind a feature flag by Thursday.",
-};
-
 export default function ChatAssistant() {
   const { user } = useAuth();
   const [localMessages, setLocalMessages] = useState([]);
@@ -64,11 +56,7 @@ export default function ChatAssistant() {
       setLocalMessages(m => [...m, { role: 'ai', text: result.response }]);
       refetchHistory();
     } catch {
-      // Graceful mock fallback if Gemini not configured
-      await new Promise(r => setTimeout(r, 900));
-      const key = t.toLowerCase();
-      const reply = MOCK_REPLIES[key] || MOCK_REPLIES.default;
-      setLocalMessages(m => [...m, { role: 'ai', text: reply }]);
+      setLocalMessages(m => [...m, { role: 'ai', text: "I'm having trouble connecting right now. Please try again in a moment." }]);
     } finally {
       setTyping(false);
     }

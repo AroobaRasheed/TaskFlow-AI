@@ -10,7 +10,7 @@ const calcScore = (c, t) => t === 0 ? 0 : Math.min(100, Math.round((c / t) * 100
 // ─── Team progress ────────────────────────────────────────────────────────
 router.get('/team', auth, async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find({ createdBy: req.user._id });
     const byStatus = {
       todo: tasks.filter(t => t.status === 'todo').length,
       in_progress: tasks.filter(t => t.status === 'in_progress').length,
@@ -28,7 +28,8 @@ router.get('/team', auth, async (req, res) => {
       overdueCount: tasks.filter(t => t.status !== 'completed' && isOverdue(t.deadline)).length,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -40,6 +41,7 @@ router.get('/deadlines', auth, async (req, res) => {
     const tasks = await Task.find({
       status: { $ne: 'completed' },
       deadline: { $gte: now, $lte: sevenDays },
+      createdBy: req.user._id,
     }).sort({ deadline: 1 });
 
     res.json(tasks.map(t => ({
@@ -51,7 +53,8 @@ router.get('/deadlines', auth, async (req, res) => {
       daysLeft: Math.ceil((t.deadline - now) / (1000 * 60 * 60 * 24)),
     })));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

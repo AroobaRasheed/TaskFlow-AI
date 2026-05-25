@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Filter, ArrowUpDown, X, Loader2, Trash2, CheckCircle } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useApi } from '../hooks/useApi.js';
-import { kanban as mockKanban } from '../data/mock.js';
 
 const STATUS_MAP = { 'To Do': 'todo', 'In Progress': 'in_progress', 'Completed': 'completed' };
 
@@ -40,7 +39,7 @@ export default function TaskBoard() {
         'In Progress': filteredTasks.filter(t => t.status === 'in_progress'),
         'Completed':   filteredTasks.filter(t => t.status === 'completed'),
       }
-    : { 'To Do': mockKanban['To Do'], 'In Progress': mockKanban['In Progress'], 'Completed': mockKanban['Completed'] };
+    : { 'To Do': [], 'In Progress': [], 'Completed': [] };
 
   const openNew = (status = 'todo') => {
     setEditTask(null);
@@ -111,7 +110,7 @@ export default function TaskBoard() {
         <div>
           <h1 className="font-display text-3xl font-bold">Task Board</h1>
           <p className="text-white/50 text-sm">
-            {isLive ? `${tasks.length} tasks · Real-time` : 'Demo mode · Sign up to save tasks'}
+            {tasks ? `${tasks.length} tasks` : 'Loading…'}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -131,7 +130,7 @@ export default function TaskBoard() {
 
       <div className="grid lg:grid-cols-3 gap-5">
         {cols.map((c, ci) => {
-          const colTasks = isLive ? grouped[c.key] : mockKanban[c.key];
+          const colTasks = grouped[c.key] ?? [];
           return (
             <motion.div key={c.key} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: ci * 0.05 }}
               className="glass p-4 min-h-[60vh]">
@@ -149,7 +148,7 @@ export default function TaskBoard() {
               </div>
 
               <div className="space-y-3">
-                {isLive ? colTasks.map((t) => (
+                {colTasks.map((t) => (
                   <LiveTaskCard
                     key={t._id}
                     task={t}
@@ -157,8 +156,6 @@ export default function TaskBoard() {
                     onDelete={() => handleDelete(t._id)}
                     onStatusChange={handleStatusChange}
                   />
-                )) : mockKanban[c.key].map((t, i) => (
-                  <MockTaskCard key={t.id} task={t}/>
                 ))}
 
                 <button
@@ -290,22 +287,3 @@ function LiveTaskCard({ task, onEdit, onDelete, onStatusChange }) {
   );
 }
 
-function MockTaskCard({ task }) {
-  const PRIORITY_COLORS = {
-    High: 'text-rose-400 bg-rose-400/10',
-    Medium: 'text-amber-400 bg-amber-400/10',
-    Low: 'text-emerald-400 bg-emerald-400/10',
-  };
-  return (
-    <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
-      <div className="text-sm font-medium mb-1">{task.title}</div>
-      <p className="text-xs text-white/40 mb-3 line-clamp-2">{task.description}</p>
-      <div className="flex items-center gap-2">
-        <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.Medium}`}>
-          {task.priority}
-        </span>
-        <span className="text-xs text-white/40">{task.deadline}</span>
-      </div>
-    </div>
-  );
-}

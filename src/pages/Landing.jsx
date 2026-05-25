@@ -13,9 +13,9 @@ const features = [
 ];
 
 const testimonials = [
-  { name: 'Mira Chen',    role: 'Design Lead at Framer', quote: 'TaskFlow AI cut our sprint planning from 2 hours to 20 minutes.' },
-  { name: 'Jordan Reyes', role: 'Sr. Engineer at Stripe', quote: 'The AI risk scoring caught a 3-week delay before we even started the sprint.' },
-  { name: 'Sam Patel',    role: 'PM at Anthropic',        quote: 'Finally a PM tool that actually understands what "blocked" means.' },
+  { name: 'Sarah M.',     role: 'Design Lead',       quote: 'TaskFlow AI cut our sprint planning time dramatically.' },
+  { name: 'James R.',     role: 'Senior Engineer',    quote: 'The AI risk scoring catches delays before they happen.' },
+  { name: 'Priya K.',     role: 'Product Manager',    quote: 'Finally a PM tool that understands what blocked means.' },
 ];
 
 export default function Landing() {

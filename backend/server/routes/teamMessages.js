@@ -7,11 +7,12 @@ const router = Router();
 // ─── Get messages ─────────────────────────────────────────────────────────
 router.get('/', auth, async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 100;
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 100, 1), 200);
     const messages = await TeamMessage.find().sort({ createdAt: -1 }).limit(limit);
     res.json(messages);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -31,7 +32,8 @@ router.post('/', auth, async (req, res) => {
 
     res.status(201).json(msg);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

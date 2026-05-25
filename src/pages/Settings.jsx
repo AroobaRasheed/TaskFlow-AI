@@ -273,7 +273,7 @@ function AppearancePane() {
           <Toggle defaultOn={compactMode} onChange={handleCompact}/>
         </Row>
         <Row label="Glass panels" hint="Translucent blurred surfaces (always on)">
-          <Toggle defaultOn={true}/>
+          <span className="text-xs text-white/40">Always on</span>
         </Row>
       </div>
     </Card>
@@ -329,11 +329,7 @@ function NotificationsPane() {
 // ─── Team ─────────────────────────────────────────────────────────────────
 
 function TeamPane() {
-  const [members, setMembers] = useState([
-    { name: 'Mira Chen',    role: 'Design Lead',   email: 'mira@taskflow.ai',   plan: 'Admin'  },
-    { name: 'Jordan Reyes', role: 'Sr. Engineer',  email: 'jordan@taskflow.ai', plan: 'Member' },
-    { name: 'Sam Patel',    role: 'ML Researcher', email: 'sam@taskflow.ai',    plan: 'Member' },
-  ]);
+  const [members, setMembers] = useState([]);
   const [showInvite, setShowInvite]   = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole]   = useState('Member');
@@ -422,9 +418,7 @@ function SecurityPane() {
   const navigate = useNavigate();
 
   const sessions = [
-    { device: 'Chrome · Windows 11',   location: 'Lahore, PK',   time: 'Now (current)',    current: true  },
-    { device: 'Safari · iPhone 15',    location: 'Lahore, PK',   time: '2 hours ago',      current: false },
-    { device: 'Firefox · MacBook Pro', location: 'Karachi, PK',  time: 'Yesterday 10:32',  current: false },
+    { device: navigator.userAgent.includes('Chrome') ? 'Chrome' : navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Browser', location: 'Current session', time: 'Now', current: true },
   ];
 
   const handlePwChange = (e) => {
@@ -514,64 +508,12 @@ function SecurityPane() {
 // ─── Billing ──────────────────────────────────────────────────────────────
 
 function BillingPane() {
-  const [showUpgrade, setShowUpgrade] = useState(false);
-
-  const plans = [
-    { name: 'Pro',        price: '$29/seat/mo',  features: ['Unlimited AI analysis','5 workspaces','Priority support'],             current: true  },
-    { name: 'Enterprise', price: '$79/seat/mo',  features: ['SSO + SAML','Audit logs','Dedicated CSM','Custom AI models'],          current: false },
-  ];
-
   return (
-    <Card title="Billing" sub="Manage your subscription and payment">
-      <Row label="Current plan" hint="Pro · billed monthly">
-        <span className="text-xs font-medium px-3 py-1 rounded-full border"
-          style={{ color: 'var(--accent-1, #8B5CF6)', borderColor: 'var(--accent-1, #8B5CF6)4D', background: 'var(--accent-1, #8B5CF6)1A' }}>
-          Pro Plan
-        </span>
-      </Row>
-      <Row label="Next invoice" hint="June 30, 2026">
-        <span className="text-sm font-semibold">$348.00</span>
-      </Row>
-      <Row label="Payment method" hint="Visa ending in 4242 · exp 09/27">
-        <button className="btn-ghost text-xs py-1.5 px-3">Update card</button>
-      </Row>
-      <Row label="Billing email" hint="invoices@yourteam.com">
-        <button className="btn-ghost text-xs py-1.5 px-3">Change</button>
-      </Row>
-      <Row label="Download invoices" hint="Last 12 months">
-        <button className="btn-ghost text-xs py-1.5 px-3">Download</button>
-      </Row>
-
-      <div className="mt-4 pt-4 border-t border-white/5">
-        <button onClick={() => setShowUpgrade(s => !s)} className="btn-primary text-sm py-2 px-4">
-          {showUpgrade ? 'Hide plans' : '⬆ Upgrade plan'}
-        </button>
+    <Card title="Billing" sub="Subscription management">
+      <div className="text-center py-12">
+        <div className="text-white/30 text-sm">Billing management coming soon</div>
+        <div className="text-white/20 text-xs mt-2">TaskFlow AI is currently free during beta</div>
       </div>
-
-      <AnimatePresence>
-        {showUpgrade && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="mt-4 grid sm:grid-cols-2 gap-3">
-            {plans.map(p => (
-              <div key={p.name} className={`p-4 rounded-2xl border-2 transition-all ${p.current ? 'border-white/20 opacity-60' : 'border-white/10 hover:border-white/20 cursor-pointer'}`}>
-                <div className="font-display font-semibold">{p.name}</div>
-                <div className="text-sm font-bold mt-1 mb-3" style={{ color: 'var(--accent-1, #8B5CF6)' }}>{p.price}</div>
-                <ul className="space-y-1.5">
-                  {p.features.map(f => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-white/70">
-                      <Check className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--accent-1, #8B5CF6)' }}/>{f}
-                    </li>
-                  ))}
-                </ul>
-                <button className={`mt-4 w-full text-xs py-2 rounded-xl transition ${p.current ? 'bg-white/5 text-white/40 cursor-not-allowed' : 'btn-primary py-2'}`}
-                  disabled={p.current}>
-                  {p.current ? 'Current plan' : `Upgrade to ${p.name}`}
-                </button>
-              </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </Card>
   );
 }
