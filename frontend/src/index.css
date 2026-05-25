@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    @apply text-white font-sans antialiased;
+    background-color: #0B0B12;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(139,92,246,0.15), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 100%, rgba(59,130,246,0.12), transparent 60%),
+      linear-gradient(180deg, #0B0B12 0%, #07070C 100%);
+    background-attachment: fixed;
+  }
+  ::selection { background: rgba(139,92,246,0.4); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.5); }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl;
+  }
+  .glass-strong {
+    @apply bg-white/[0.06] backdrop-blur-2xl border border-white/10 rounded-2xl;
+  }
+  .glow-purple { box-shadow: 0 0 40px var(--glow-1, rgba(139,92,246,0.35)); }
+  .glow-blue   { box-shadow: 0 0 40px var(--glow-2, rgba(59,130,246,0.3)); }
+
+  /* Theme-aware button — uses CSS vars so theme switcher works instantly */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-white
+           transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0;
+    background: linear-gradient(to right, var(--btn-from, #8B5CF6), var(--btn-to, #3B82F6));
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 30px var(--glow-1, rgba(139,92,246,0.6));
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium
+           bg-white/5 border border-white/10 hover:bg-white/10
+           transition-all duration-300;
+  }
+  .btn-ghost:hover {
+    border-color: var(--accent-1, #8B5CF6)80;
+  }
+  .input-glow {
+    @apply w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-white
+           placeholder:text-white/30 focus:outline-none transition-all;
+  }
+  .input-glow:focus {
+    border-color: var(--accent-1, #8B5CF6)99;
+    box-shadow: 0 0 0 3px var(--accent-1, #8B5CF6)26;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full;
+  }
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to right, white, var(--accent-1, #A78BFA), var(--accent-2, #3B82F6));
+  }
+  .heading-hero {
+    @apply font-display font-bold tracking-tight;
+    background: linear-gradient(180deg, #ffffff 0%, var(--accent-1, #8B5CF6)CC 60%, var(--accent-1, #8B5CF6) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Compact mode */
+  .compact .glass { @apply rounded-xl; }
+  .compact main { @apply p-3 lg:p-5; }
+}
+
+.bg-noise::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.04; pointer-events: none;
+}
+
+/* Reduced motion */
+.reduced-motion *, .reduced-motion *::before, .reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}

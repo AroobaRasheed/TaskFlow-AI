@@ -1,0 +1,89 @@
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+function getToken() {
+  try {
+    const user = JSON.parse(localStorage.getItem('taskflow_user'));
+    return user?.token || '';
+  } catch { return ''; }
+}
+
+async function request(path, options = {}) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────
+export const api = {
+  // Users
+  signup: (body) => request('/users/signup', { method: 'POST', body: JSON.stringify(body) }),
+  login: (body) => request('/users/login', { method: 'POST', body: JSON.stringify(body) }),
+  verifyEmail: (body) => request('/users/verify-email', { method: 'POST', body: JSON.stringify(body) }),
+  resendOtp: (body) => request('/users/resend-otp', { method: 'POST', body: JSON.stringify(body) }),
+  getMe: () => request('/users/me'),
+  updateProfile: (body) => request('/users/profile', { method: 'PATCH', body: JSON.stringify(body) }),
+
+  // Tasks
+  getTasks: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return request(`/tasks${q ? '?' + q : ''}`);
+  },
+  createTask: (body) => request('/tasks', { method: 'POST', body: JSON.stringify(body) }),
+  updateTask: (id, body) => request(`/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  updateTaskStatus: (id, status) => request(`/tasks/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  deleteTask: (id) => request(`/tasks/${id}`, { method: 'DELETE' }),
+
+  // Dashboard
+  getStats: () => request('/dashboard/stats'),
+  getRecentActivity: () => request('/dashboard/recent'),
+  getStatusDistribution: () => request('/dashboard/distribution'),
+
+  // Chat
+  getChatHistory: (limit = 50) => request(`/chat/history?limit=${limit}`),
+  sendMessage: (message) => request('/chat/send', { method: 'POST', body: JSON.stringify({ message }) }),
+  clearChat: () => request('/chat/clear', { method: 'DELETE' }),
+
+  // AI
+  analyzeTask: (body) => request('/ai/analyze', { method: 'POST', body: JSON.stringify(body) }),
+  getInsights: (body) => request('/ai/insights', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Progress
+  getTeamProgress: () => request('/progress/team'),
+  getUpcomingDeadlines: () => request('/progress/deadlines'),
+
+  // Analytics
+  getLiveScore: () => request('/analytics/score'),
+  getOverdueCount: () => request('/analytics/overdue'),
+  getWeeklyTrends: (weeks = 8) => request(`/analytics/trends?weeks=${weeks}`),
+
+  // Team Members
+  listTeamMembers: () => request('/team-members'),
+  addTeamMember: (body) => request('/team-members', { method: 'POST', body: JSON.stringify(body) }),
+  updateTeamMember: (id, body) => request(`/team-members/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  removeTeamMember: (id) => request(`/team-members/${id}`, { method: 'DELETE' }),
+
+  // Team Messages
+  getTeamMessages: (limit = 100) => request(`/team-messages?limit=${limit}`),
+  sendTeamMessage: (body) => request('/team-messages', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Workflows
+  listWorkflows: () => request('/workflows'),
+  createWorkflow: (body) => request('/workflows', { method: 'POST', body: JSON.stringify(body) }),
+  updateStepStatus: (wfId, stepId, status) => request(`/workflows/${wfId}/steps/${stepId}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  deleteWorkflow: (id) => request(`/workflows/${id}`, { method: 'DELETE' }),
+
+  // Notifications
+  getNotifications: () => request('/notifications'),
+  markRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllRead: () => request('/notifications/read-all', { method: 'PATCH' }),
+};

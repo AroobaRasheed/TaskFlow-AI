@@ -1,7 +1,8 @@
 node_modules/
 dist/
-.env.local
 .env
-convex/_generated/
+.env.local
 *.log
 .DS_Store
+.convex/
+.vercel/
