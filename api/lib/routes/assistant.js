@@ -8,9 +8,102 @@ import Notification from '../models/Notification.js';
 
 const router = Router();
 
+// ─── Keyword fallback parser (works without Gemini) ─────────────────────
+function parseIntentLocal(msg) {
+  const m = msg.toLowerCase();
+
+  // Stats
+  if (/\b(stats|statistics|dashboard|how am i doing|my progress|performance)\b/.test(m))
+    return { action: 'get_stats' };
+
+  // Overdue
+  if (/\b(overdue|past due|missed deadline|late tasks?)\b/.test(m))
+    return { action: 'get_overdue' };
+
+  // Deadlines
+  if (/\b(deadline|due soon|upcoming|what'?s due)\b/.test(m))
+    return { action: 'get_deadlines' };
+
+  // List tasks
+  if (/\b(list|show|all|my)\b.*\btask/.test(m) || /\btasks?\b.*\b(list|show|all)\b/.test(m))
+    return { action: 'list_tasks', status: 'all', priority: 'all' };
+
+  // Delete task
+  if (/\b(delete|remove)\b.*\btask\b/.test(m)) {
+    const title = msg.replace(/^.*?(delete|remove)\s+(the\s+)?task\s+(called\s+|named\s+)?/i, '').replace(/["""]/g, '').trim();
+    return { action: 'delete_task', title };
+  }
+
+  // Mark task done
+  if (/\b(mark|set|change)\b.*\b(done|complete|finished)\b/.test(m)) {
+    const title = msg.replace(/^.*?(mark|set|change)\s+(the\s+)?/i, '').replace(/\s*(as\s+)?(done|complete|finished|completed).*$/i, '').replace(/["""]/g, '').trim();
+    return { action: 'update_task_status', title, status: 'completed' };
+  }
+
+  // Start task
+  if (/\b(start|begin)\b.*\b(working|task)\b/.test(m)) {
+    const title = msg.replace(/^.*?(start|begin)\s+(working\s+on\s+)?/i, '').replace(/["""]/g, '').trim();
+    return { action: 'update_task_status', title, status: 'in_progress' };
+  }
+
+  // Create task
+  if (/\b(create|add|new|make)\b.*\btask\b/.test(m)) {
+    const titleMatch = msg.match(/(?:called|named|titled?)\s+["""]?(.+?)["""]?(?:\s+with|\s+due|\s+priority|$)/i)
+      || msg.match(/task\s+["""](.+?)["""]/i)
+      || msg.match(/task\s+(?:called\s+|named\s+)?(.+?)(?:\s+due|\s+with|\s+priority|$)/i);
+    const title = titleMatch?.[1]?.trim() || 'Untitled Task';
+    const priority = /\bhigh\b/i.test(m) ? 'high' : /\blow\b/i.test(m) ? 'low' : 'medium';
+    const deadlineMatch = m.match(/due\s+(tomorrow|today|next\s+\w+|\d{4}-\d{2}-\d{2})/i);
+    let deadline = null;
+    if (deadlineMatch) {
+      const d = deadlineMatch[1].toLowerCase();
+      if (d === 'tomorrow') deadline = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+      else if (d === 'today') deadline = new Date().toISOString().slice(0, 10);
+      else if (/^\d{4}/.test(d)) deadline = d;
+    }
+    return { action: 'create_task', title, priority, status: 'todo', deadline, description: '' };
+  }
+
+  // Team
+  if (/\b(show|list|my)\b.*\bteam\b/.test(m) || /\bteam\b.*\b(members?|list|show)\b/.test(m))
+    return { action: 'list_team' };
+
+  if (/\b(add|invite)\b.*\b(member|teammate|person)\b/.test(m) || /\badd\b.*\bas\b/.test(m)) {
+    const nameMatch = msg.match(/add\s+(\w+)/i);
+    const emailMatch = msg.match(/email\s+(\S+@\S+)/i);
+    const roleMatch = msg.match(/as\s+(?:a\s+)?(\w+)/i);
+    return { action: 'add_team_member', name: nameMatch?.[1] || '', email: emailMatch?.[1] || '', role: roleMatch?.[1] || 'Member' };
+  }
+
+  if (/\b(remove|kick)\b.*\b(member|teammate)\b/.test(m)) {
+    const nameMatch = msg.match(/(?:remove|kick)\s+(\w+)/i);
+    return { action: 'remove_team_member', name: nameMatch?.[1] || '' };
+  }
+
+  // Workflows
+  if (/\b(list|show|my)\b.*\bworkflow/.test(m))
+    return { action: 'list_workflows' };
+
+  if (/\b(create|new|make)\b.*\bworkflow\b/.test(m)) {
+    const titleMatch = msg.match(/workflow\s+(?:called\s+|named\s+)?["""]?(.+?)["""]?\s+with/i);
+    const stepsMatch = msg.match(/steps?:?\s*(.+)/i);
+    const steps = stepsMatch ? stepsMatch[1].split(/,\s*/).map(s => s.trim()).filter(Boolean) : [];
+    return { action: 'create_workflow', title: titleMatch?.[1] || 'New Workflow', steps };
+  }
+
+  return null; // no match
+}
+
 // ─── Parse intent from natural language ──────────────────────────────────
 async function parseIntent(message) {
-  const prompt = `You are an intent parser for a project management app called TaskFlow AI.
+  // Try keyword parser first (instant, no API needed)
+  const local = parseIntentLocal(message);
+  if (local) return local;
+
+  // Try Gemini for complex/ambiguous messages
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (apiKey) {
+    const prompt = `You are an intent parser for a project management app called TaskFlow AI.
 Parse the user's message into a JSON action. Respond ONLY with valid JSON, no markdown.
 
 Available actions:
@@ -28,28 +121,16 @@ Available actions:
 - {"action":"get_overdue"}
 - {"action":"chat","message":"..."}  (for general questions/advice)
 
-Rules:
-- If the user wants to create a task, extract title, description, priority, deadline from context
-- If priority isn't mentioned, default to "medium"
-- If status isn't mentioned for create, default to "todo"
-- "mark X as done/complete" → update_task_status with status "completed"
-- "start working on X" → update_task_status with status "in_progress"
-- "show my tasks" or "what are my tasks" → list_tasks
-- "how am I doing" or "my stats" → get_stats
-- "what's overdue" → get_overdue
-- "upcoming deadlines" → get_deadlines
-- For general conversation/advice, use action "chat"
-- Always respond with valid JSON only
-
 User message: "${message.replace(/"/g, '\\"')}"`;
 
-  try {
-    const raw = await callGemini(prompt);
-    const clean = raw.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean);
-  } catch {
-    return { action: 'chat', message };
+    try {
+      const raw = await callGemini(prompt);
+      const clean = raw.replace(/```json|```/g, '').trim();
+      return JSON.parse(clean);
+    } catch { /* fall through */ }
   }
+
+  return { action: 'chat', message };
 }
 
 // ─── Execute the parsed action ───────────────────────────────────────────
@@ -264,16 +345,20 @@ async function executeAction(intent, userId) {
 
     case 'chat':
     default: {
-      try {
-        const chatPrompt = `You are TaskFlow AI — a friendly, concise productivity assistant.
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (apiKey) {
+        try {
+          const chatPrompt = `You are TaskFlow AI — a friendly, concise productivity assistant.
 Answer in 2-4 sentences with practical, actionable advice.
 Also let the user know they can ask you to create tasks, check stats, manage team, etc.
 
 User: ${intent.message || intent.action}`;
-        result.message = await callGemini(chatPrompt);
-      } catch {
-        result.message = "I can help you manage tasks, check stats, view deadlines, and more. Try saying:\n• \"Create a task called...\"\n• \"Show my stats\"\n• \"What's overdue?\"\n• \"Add John as Developer with email john@test.com\"";
+          result.message = await callGemini(chatPrompt);
+          result.data = { type: 'chat' };
+          break;
+        } catch { /* fall through to static response */ }
       }
+      result.message = "I didn't quite catch that. Here's what I can do:\n\n• **\"Show my stats\"** — view your dashboard\n• **\"List my tasks\"** — see all tasks\n• **\"Create a task called X\"** — add a new task\n• **\"What's overdue?\"** — check late tasks\n• **\"Show my team\"** — view team members\n• **\"Mark X as done\"** — complete a task\n• **\"Upcoming deadlines\"** — see what's due soon";
       result.data = { type: 'chat' };
       break;
     }
