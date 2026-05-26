@@ -12,6 +12,10 @@ const router = Router();
 function parseIntentLocal(msg) {
   const m = msg.toLowerCase();
 
+  // Help / what can you do
+  if (/\b(help|what can you|what do you|what you can|capabilities|features|how to use)\b/.test(m))
+    return { action: 'help' };
+
   // Stats
   if (/\b(stats|statistics|dashboard|how am i doing|my progress|performance)\b/.test(m))
     return { action: 'get_stats' };
@@ -343,14 +347,22 @@ async function executeAction(intent, userId) {
       break;
     }
 
+    case 'help': {
+      result.message = "Hey! I'm your AI assistant and I can do quite a lot 😊\n\nHere's what I can help you with:\n\n🗂 **Task Management** — Create, list, update, or delete tasks just by telling me\n📊 **Stats & Analytics** — Get a quick overview of how you're doing\n⏰ **Deadlines & Overdue** — I'll tell you what's due soon or already late\n👥 **Team** — Add or remove team members, see who's on your team\n🔄 **Workflows** — Create step-by-step workflows to organize your process\n\nJust talk to me naturally! For example:\n• \"Create a high priority task called Design Review due tomorrow\"\n• \"What's overdue?\"\n• \"Show my stats\"";
+      result.data = { type: 'chat' };
+      break;
+    }
+
     case 'chat':
     default: {
       const apiKey = process.env.GEMINI_API_KEY;
       if (apiKey) {
         try {
-          const chatPrompt = `You are TaskFlow AI — a friendly, concise productivity assistant.
-Answer in 2-4 sentences with practical, actionable advice.
-Also let the user know they can ask you to create tasks, check stats, manage team, etc.
+          const chatPrompt = `You are TaskFlow AI — a friendly, warm, human-like productivity assistant built into a project management app.
+Respond naturally like a helpful colleague, not a robot. Use a conversational tone.
+Keep responses concise (2-4 sentences). Be encouraging and practical.
+You can help with: creating/managing tasks, viewing stats, checking deadlines/overdue items, managing team members, and creating workflows.
+If the user's message is casual (like "hi", "thanks", "cool"), respond warmly and briefly.
 
 User: ${intent.message || intent.action}`;
           result.message = await callGemini(chatPrompt);
@@ -358,7 +370,7 @@ User: ${intent.message || intent.action}`;
           break;
         } catch { /* fall through to static response */ }
       }
-      result.message = "I didn't quite catch that. Here's what I can do:\n\n• **\"Show my stats\"** — view your dashboard\n• **\"List my tasks\"** — see all tasks\n• **\"Create a task called X\"** — add a new task\n• **\"What's overdue?\"** — check late tasks\n• **\"Show my team\"** — view team members\n• **\"Mark X as done\"** — complete a task\n• **\"Upcoming deadlines\"** — see what's due soon";
+      result.message = "Hmm, I'm not sure what you mean by that! But no worries — I'm here to help 😊\n\nTry asking me things like:\n• \"Create a task called...\"\n• \"Show my stats\"\n• \"What's overdue?\"\n• \"Show my team\"\n\nOr just ask me what I can do!";
       result.data = { type: 'chat' };
       break;
     }
